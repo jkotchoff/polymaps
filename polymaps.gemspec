@@ -7,9 +7,9 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["cornflakesuperstar"]
   s.date = %q{2009-02-27}
-  s.description = %q{Polymaps lets you overlay clickable polygons on top of a google map with your specified geo-coded regions}
+  s.description = %q{TODO}
   s.email = %q{cornflakesuperstar@hotmail.com}
-  s.files = ["VERSION.yml", "lib/poly_maps.rb", "lib/poly_maps.js", "lib/country_centers_and_zooms.yml"]
+  s.files = ["VERSION.yml", "lib/poly_maps.rb", "lib/poly_maps.js", "lib/country_centers_and_zooms.yml", "test/poly_maps_test.rb"]
   s.has_rdoc = true
   s.homepage = %q{http://github.com/cornflakesuperstar/polymaps}
   s.rdoc_options = ["--inline-source", "--charset=UTF-8"]
