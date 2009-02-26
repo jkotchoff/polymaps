@@ -1,7 +1,154 @@
-polymaps========
-Description goes here.
+= Polymaps - Ruby Polygon overlays for Google Maps
 
-COPYRIGHT
-=========
+- http://www.kangarooit.com/polymaps/polymaps_rails_plugin.php
+- http://groups.google.com/group/polymaps
+- http://github.com/cornflakesuperstar/polymaps
 
-Copyright (c) 2008 cornflakesuperstar. See LICENSE for details.
+== Description
+
+Polymaps lets you quickly overlay clickable polygons on top of a google map with your specified geo-coded regions.
+
+== Usage Doc
+
+<% polygons = PolyMaps::Renderer.new(country_code, regions_collection, relationship_name, onclick_handler, polygon_limit) -%>
+<%= polygons.js %>
+
+  @param country_code consisting of two letters and complying to the ISO 3166-1 
+    alpha-2 standard
+
+  @param regions_collection objects will be checked for a 'name' attribute which 
+    will display as the polygon label (if it exists)
+
+  @param relationship_name refers to the region objects relationship name specifying
+    the child 'ordinate' objects (which must each have a 'lat' and 'lng' attribute)
+
+  @param onclick_handler will be interpreted and assumes a 'region' object will be 
+    in scope
+
+  @param polygon_limit (optional) can be set to limit the number of polygons that are rendered for javascript
+  	performance purposes (you don't really want a gazillion points being rendered on your map do you?)
+
+== Example Code
+
+  class Country < ActiveRecord::Base
+    has_many                  :regions
+    validates_presence_of     :code       # eg. 'AU'
+  end
+
+  class Region < ActiveRecord::Base
+    belongs_to                :country
+    has_many                  :branches
+    validates_presence_of     :name       # eg. 'Victoria'
+  end
+
+  class Branch < ActiveRecord::Base
+    belongs_to :region
+    validates_presence_of     :lat, :lng
+  end
+
+  view.html.erb:
+  <% country = Country.find_by_code("TW") -%>
+  <% polygons = PolyMaps::Renderer.new(country.code, country.regions, 'branches', 'document.location.href=\'/regions/show/#{region.id}\'' ) %>
+  <html>
+  <body onload="draw_polymap()">
+  <div id="map_canvas" style="width:100%; height:400px;"></div>
+  <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=yourkey" type="text/javascript"></script>
+  <script language="javascript"><!--
+  <%= polygons.library_js %>
+
+  function draw_polymap() {
+    var map = new GMap2(document.getElementById("map_canvas"));
+    map.addControl(new GSmallMapControl());
+    <%= polygons.js %>
+
+   }
+  //--></script>
+  </body>
+  </html>
+
+== Example Output
+  <html>
+  <body onload="draw_polymap()">
+  <div id="map_canvas" style="width:100%; height:400px;"></div>
+  <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=yourkey" type="text/javascript"></script>
+  <script language="javascript"><!--
+  //...include js
+
+  function draw_polymap() {
+  	var map = new GMap2(document.getElementById("map_canvas"));
+  	map.addControl(new GSmallMapControl());
+		var country_points = [[...country_points...];
+    var pts = [];
+    for (var i = 0; i < country_points.length; i++) {
+      pts[i] = new GLatLng(country_points[i][0],country_points[i][1]);
+    }
+    var country_polygon = new GPolygon(pts,"#000000",1,1,"",0.5,{clickable:false});
+    var country_zoom = 7;
+    map.setCenter(new GLatLng(23.714954, 120.849609), country_zoom);
+    var min_area_sqm = 250000000;
+    var circle_radius = 7000;
+    var regions = [[function() { document.location.href='/regions/show/168'; },[...region points...]];
+    var hex_colors = ['#3399cc','#669900','#9966cc','#ff3300','#ff00ff','#ff9900','#cc99cc','#ffff00'];
+    var color_index = 0;
+    for(var i = 0; i < regions.length; i++) {
+      region = regions[i];
+      hex_color = hex_colors[color_index]
+      color_index = (color_index == hex_colors.length-1)? 0 : color_index + 1;
+      var polygon = null;
+      var region_bounds = new GLatLngBounds();
+      var points_js = region[1];
+      var pts = [];
+      for (var j = 0; j < points_js.length; j++) {
+        lat_lng = new GLatLng(points_js[j][0],points_js[j][1]);
+        if (country_polygon.Contains(lat_lng)) {
+          pts[pts.length] = lat_lng;
+          region_bounds.extend(lat_lng);
+        }
+      }
+      var region_polygon = new GPolygon(pts,hex_color,1,1,hex_color,0.5);
+      if (region_polygon.getArea() < min_area_sqm) {
+      	 polygon = GPolygon.Circle(region_bounds.getCenter(), circle_radius, hex_color, 1, 1, hex_color, 0.5);
+	     } else {
+        polygon = calculateConvexHull(map, pts, hex_color);
+	     }
+      GEvent.addListener(polygon, 'mouseover', mouseover_cursor);
+	     if (region[0] != null) {
+        GEvent.addListener(polygon, 'click', region[0]);
+	     }
+      map.addOverlay(polygon);
+    }
+  }
+  //--></script>
+  </body>
+  </html>
+
+
+== Troubleshooting
+
+Check your console for 'Polymaps Unsupported country code: ..' messages. The lib/country_centers_and_zooms.yml needs more data 
+(I use http://www.kangarooit.com/developer_blog/hover_lat_lng.html to get this data by plotting a rectangle around each country)
+
+== Install for Rails
+
+First, ensure that you’re running at least RubyGems 1.2 (check gem -v if you’re not sure).
+
+The polymaps gem is built by GitHub. Add GitHub to your gem sources (once per machine):
+
+gem sources -a http://gems.github.com
+
+Install the library:
+
+gem install cornflakesuperstar-polymaps
+
+To install the latest code as a plugin: 
+
+  script/plugin install git://github.com/cornflakesuperstar/polymaps.git
+
+== Authors
+
+- Developed by {Jason Kotchoff}[http://www.kangarooit.com/contact_us.php]
+
+== License
+
+Copyright (c) 2009 Jason Kotchoff.
+See MIT-LICENSE.txt in this directory.
