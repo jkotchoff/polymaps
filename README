@@ -8,26 +8,6 @@
 
 Polymaps lets you overlay clickable polygons on top of a google map with your specified geo-coded regions.
 
-== Usage Doc
-
-<% polygons = PolyMaps::Renderer.new(country_code, regions_collection, relationship_name, onclick_handler, polygon_limit) -%>
-<%= polygons.js %>
-
-  @param country_code consisting of two letters and complying to the ISO 3166-1 
-    alpha-2 standard
-
-  @param regions_collection objects will be checked for a 'name' attribute which 
-    will display as the polygon label (if it exists)
-
-  @param relationship_name refers to the region objects relationship name specifying
-    the child 'ordinate' objects (which must each have a 'lat' and 'lng' attribute)
-
-  @param onclick_handler will be interpreted and assumes a 'region' object will be 
-    in scope
-
-  @param polygon_limit (optional) can be set to limit the number of polygons that are rendered for javascript
-  	performance purposes (you don't really want a gazillion points being rendered on your map do you?)
-
 == Example Code
 
   class Country < ActiveRecord::Base
@@ -37,18 +17,18 @@ Polymaps lets you overlay clickable polygons on top of a google map with your sp
 
   class Region < ActiveRecord::Base
     belongs_to                :country
-    has_many                  :branches
+    has_many                  :points
     validates_presence_of     :name       # eg. 'Victoria'
   end
 
-  class Branch < ActiveRecord::Base
+  class Point < ActiveRecord::Base
     belongs_to :region
     validates_presence_of     :lat, :lng
   end
 
   view.html.erb:
   <% country = Country.find_by_code("TW") -%>
-  <% polygons = PolyMaps::Renderer.new(country.code, country.regions, 'branches', 'document.location.href=\'/regions/show/#{region.id}\'' ) %>
+  <% polygons = PolyMaps::Renderer.new(country.code, country.regions, 'points', 'document.location.href=\'/regions/show/#{region.id}\'' ) %>
   <html>
   <body onload="draw_polymap()">
   <div id="map_canvas" style="width:100%; height:400px;"></div>
@@ -122,11 +102,33 @@ Polymaps lets you overlay clickable polygons on top of a google map with your sp
   </body>
   </html>
 
+== Usage Doc
+
+<% polygons = PolyMaps::Renderer.new(country_code, regions_collection, relationship_name, onclick_handler, polygon_limit) -%>
+<%= polygons.js %>
+
+  @param country_code consisting of two letters and complying to the ISO 3166-1 
+    alpha-2 standard
+
+  @param regions_collection objects will be checked for a 'name' attribute which 
+    will display as the polygon label (if it exists)
+
+  @param relationship_name refers to the region objects relationship name specifying
+    the child 'ordinate' objects (which must each have a 'lat' and 'lng' attribute)
+
+  @param onclick_handler will be interpreted and assumes a 'region' object will be 
+    in scope
+
+  @param polygon_limit (optional) can be set to limit the number of polygons that are rendered for javascript
+  	performance purposes (you don't really want a gazillion points being rendered on your map do you?)
+
 
 == Troubleshooting
 
 Check your console for 'Polymaps Unsupported country code: ..' messages. The lib/country_centers_and_zooms.yml needs more data 
 (I use http://www.kangarooit.com/developer_blog/hover_lat_lng.html to get this data by plotting a rectangle around each country)
+
+If you install as a gem, make sure the require statement has an underscore in the name (require "poly_maps" )
 
 == Install for Rails
 
