@@ -140,6 +140,11 @@ Install the library:
 
 gem install cornflakesuperstar-polymaps
 
+To enable the library, load it at the end of “config/environment.rb”
+
+require "poly_maps" 
+
+
 To install the latest code as a plugin: 
 
   script/plugin install git://github.com/cornflakesuperstar/polymaps.git
